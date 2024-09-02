@@ -20,7 +20,9 @@ export default class Mascota extends BaseModel {
   @column()
   declare fecha_ingreso: string
   @column()
-  declare image_mascota: string | null
+  declare is_adoptado: boolean
+  @column()
+  declare imagen_mascota: string | null
   @column()
   declare usuario_id: number | null
   @column()

@@ -1,8 +1,9 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
+import { BaseModel, column, belongsTo, hasOne } from '@adonisjs/lucid/orm'
 import Mascota from './mascota.js'
 import Usuario from './usuario.js'
-import type { BelongsTo } from '@adonisjs/lucid/types/relations'
+import type { BelongsTo, HasOne } from '@adonisjs/lucid/types/relations'
+import EstadoSolicitud from './estado_solicitud.js'
 export default class SolicitudAdopcion extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
@@ -37,6 +38,9 @@ export default class SolicitudAdopcion extends BaseModel {
     "foreignKey": "id"
   })
   declare usuario: BelongsTo<typeof Usuario>
+
+  @hasOne(() => EstadoSolicitud)
+  declare estadoSolicitud: HasOne<typeof EstadoSolicitud>
 
 
 }

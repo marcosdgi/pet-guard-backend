@@ -1,10 +1,11 @@
 import Mascota from '#models/mascota'
 import type { HttpContext } from '@adonisjs/core/http'
+import { IMascota } from '../interfaces/mascota.js'
 
 export default class MascotasController {
     async index({ response }: HttpContext) {
-        const mascotas: Mascota[] | [] = await Mascota.all()
-        
+        const mascotas: Mascota[] | [] = await Mascota.query()
+            .preload('raza')
         if (mascotas.length) {
             return response.status(200).send(mascotas)
         } else {
@@ -15,7 +16,7 @@ export default class MascotasController {
     }
 
     async crearMascota({ request, response }: HttpContext) {
-        const mascotaData: {} | null = request.body
+        const mascotaData = <IMascota>request.body()
         if (mascotaData) {
             const mascota: Mascota = await Mascota.create(mascotaData)
             if (mascota) {
@@ -32,4 +33,30 @@ export default class MascotasController {
         }
     }
 
+    async actualizarInfoMascota({ request, params, response }: HttpContext) {
+        const mascotaId: number = params.mascotaId
+        const mascota: Mascota | null = await Mascota.find(mascotaId)
+        if (mascota) {
+            const dataMascota = <IMascota>request.body()
+            mascota.merge(dataMascota)
+            await mascota.save()
+            return response.status(200).send(mascota)
+        } else {
+            return response.status(404).send({
+                'message': "Mascota no encontrada"
+            })
+        }
+    }
+    async eliminarMascota({ params, response }: HttpContext) {
+        const mascotaId: number = params.mascotaId
+        const mascota: Mascota | null = await Mascota.find(mascotaId)
+        if (mascota) {
+            await mascota.delete()
+            return response.status(200)
+        } else {
+            return response.status(404).send({
+                'Message': "Mascota no encontrada"
+            })
+        }
+    }
 }

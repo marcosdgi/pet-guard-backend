@@ -2,14 +2,18 @@ import Usuario from '#models/usuario'
 import { LoginValidator } from '#validators/usuario'
 import type { HttpContext } from '@adonisjs/core/http'
 import { IUsuario } from '../interfaces/usuario.js'
+// import Mascota from '#models/mascota'
 export default class UsuariosController {
 
-    async obtenerUsuarios({ params, response }: HttpContext) {
+    async obtenerUsuariosPorRol({ params, response }: HttpContext) {
         const rolId: number = params.rolId
         const usuarios: Usuario[] = await Usuario.query()
             .where('rol_id', rolId)
             .preload('rol')
-           
+            .preload('mascotas', m => {
+                m.preload('raza')
+            })
+
 
         if (usuarios.length) {
             return response.status(200).json(usuarios)
@@ -24,6 +28,36 @@ export default class UsuariosController {
         const userInfo = await LoginValidator.validate(request.all())
         const usuario = await Usuario.verifyCredentials(userInfo.correo, userInfo.contrasena)
         return response.status(200).send(usuario)
+    }
+
+    async obtenerUsuarios({ response }: HttpContext) {
+        const usuarios: Usuario[] = await Usuario.all()
+        if (usuarios) {
+            return response.status(200).send(usuarios)
+        } else {
+            return response.status(200).send([])
+        }
+    }
+
+    async obtenerUsuarioById({ params, response }: HttpContext) {
+        const usuarioId: number = params.usuarioId
+        if (usuarioId) {
+            const usuario: Usuario[] = await Usuario.query()
+                .where('id', usuarioId)
+                .preload('mascotas')
+                .preload('rol')
+            if (usuario) {
+                return response.status(200).send(usuario)
+            } else {
+                return response.status(404).send({
+                    "message": "No se encontro un usuario con ese id"
+                })
+            }
+        } else {
+            return response.status(400).send({
+                "Message": "No se envio un identificador para el usuario"
+            })
+        }
     }
 
     async crearUsuario({ request, response }: HttpContext) {
@@ -77,5 +111,16 @@ export default class UsuariosController {
             })
         }
     }
-
+    async eliminarUsuario({ params, response }: HttpContext) {
+        const usuarioId: number = params.usuarioId
+        const usuario: Usuario | null = await Usuario.find(usuarioId)
+        if (usuario) {
+            await usuario.delete()
+            return response.status(200)
+        } else {
+            return response.status(404).send({
+                "Message": "Usuario no encontrado"
+            })
+        }
+    }
 }
